@@ -3,9 +3,9 @@ import Darwin
 @testable import DevIslandCore
 
 final class EditorRoutingTests: XCTestCase {
-    func window(_ pids: [Int32], age: Double = 0, folder: String = "/same-project") -> EditorWindow {
+    func window(_ pids: [Int32], age: Double = 0, folder: String = "/same-project", canFocus: Bool = true) -> EditorWindow {
         let id = UUID().uuidString.lowercased()
-        return EditorWindow(windowID: id, socketPath: "/tmp/\(id).sock", token: String(repeating: "a", count: 64), updatedAt: Date().timeIntervalSince1970 - age,
+        return EditorWindow(windowID: id, socketPath: "/tmp/\(id).sock", token: String(repeating: "a", count: 64), canFocus: canFocus, updatedAt: Date().timeIntervalSince1970 - age,
                             workspaceFolders: [folder], terminals: pids.map { .init(id: UUID().uuidString, processID: $0, name: "same-name") })
     }
     func testExactWindowAndTerminalUseAncestryRegardlessOfNamesAndProject() throws {
@@ -25,6 +25,10 @@ final class EditorRoutingTests: XCTestCase {
         failure([window([101]),window([101])], [101], .ambiguous)
         let now = Date(), future = EditorWindow(windowID: UUID().uuidString, socketPath: "/tmp/test", token: "token", updatedAt: now.addingTimeInterval(30).timeIntervalSince1970, workspaceFolders: [], terminals: [])
         failure([future], [101], .missingConnector)
+        let oldEditor = window([101], canFocus: false)
+        failure([oldEditor], [101], .editorTooOld)
+        failure([window([101], age: 46), oldEditor], [101], .editorTooOld)
+        XCTAssertEqual(try EditorRoutePolicy.select(windows: [oldEditor, window([202])], processIDs: [202]).terminal.processID, 202)
     }
     func testSourcePIDBirthTimeProtectsAgainstReuse() throws {
         let info = try XCTUnwrap(ProcessIdentity.read(getpid()))

@@ -98,6 +98,8 @@ import DevIslandCore
         }
         let detail: String
         switch error as? EditorRoutingError {
+        case .editorTooOld:
+            detail = model.t("Dev Island eklentisi bağlı, ancak bu VS Code sürümü pencere odaklamayı desteklemiyor. VS Code'u güncelle (Code > Check for Updates), ardından pencerelerde Developer: Reload Window çalıştır.", "The Dev Island extension is connected, but this VS Code version cannot focus windows. Update VS Code (Code > Check for Updates), then run Developer: Reload Window in its windows.")
         case .sourceUnavailable:
             detail = model.t("Claude süreci kapandı veya süreç kimliği doğrulanamadı. Oturum başka bir terminalde açılmış gibi yönlendirme yapılmadı.", "The Claude process exited or its identity could not be verified. No replacement terminal was opened.")
         case .ambiguous:

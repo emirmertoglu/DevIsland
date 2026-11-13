@@ -29,13 +29,16 @@ public struct EditorTarget: Equatable {
     public let terminal: EditorTerminal
 }
 public enum EditorRoutingError: Error, Equatable {
-    case missingConnector, sourceUnavailable, missingTerminal, ambiguous, unavailable, invalidResponse, focusFailed
+    case missingConnector, editorTooOld, sourceUnavailable, missingTerminal, ambiguous, unavailable, invalidResponse, focusFailed
 }
 public enum EditorRoutePolicy {
     public static func select(windows: [EditorWindow], processIDs: Set<Int32>, now: Date = Date()) throws -> EditorTarget {
-        let current = windows.filter { $0.version == 1 && $0.bundleID == TerminalChoice.vscode.rawValue && $0.canFocus &&
+        let connected = windows.filter { $0.version == 1 && $0.bundleID == TerminalChoice.vscode.rawValue &&
             now.timeIntervalSince1970 - $0.updatedAt <= 45 && $0.updatedAt <= now.timeIntervalSince1970 + 5 }
-        guard !current.isEmpty else { throw EditorRoutingError.missingConnector }
+        guard !connected.isEmpty else { throw EditorRoutingError.missingConnector }
+        // A live connector without workbench.action.focusWindow means the VS Code build is too old, not that the extension is missing.
+        let current = connected.filter(\.canFocus)
+        guard !current.isEmpty else { throw EditorRoutingError.editorTooOld }
         guard !processIDs.isEmpty else { throw EditorRoutingError.sourceUnavailable }
         let matches = current.flatMap { window in window.terminals.filter { processIDs.contains($0.processID) }.map { EditorTarget(window: window, terminal: $0) } }
         guard !matches.isEmpty else { throw EditorRoutingError.missingTerminal }
