@@ -1,6 +1,10 @@
 import Foundation
 
-public enum ThemeMode: String, Codable, CaseIterable { case system, light, dark }
+public enum ThemeMode: String, Codable, CaseIterable {
+    case system, light, dark, black
+    /// Pure black follows the dark appearance but uses true-black surfaces that blend with the notch.
+    public var isBlack: Bool { self == .black }
+}
 public enum SurfaceMaterial: String, Codable, CaseIterable { case liquid, frosted, opaque }
 public enum GlassStyle: String, Codable, CaseIterable { case regular, clear }
 public enum CompanionVisibility: String, Codable, CaseIterable { case both, island, mascot }

@@ -28,14 +28,21 @@ final class AppearanceTests: XCTestCase {
         restored.accentHex = "FFFFFF"; XCTAssertEqual(restored.mascotHex, "FFFFFF")
         restored.mascot = .cat; XCTAssertEqual(restored.mascotHex, "7EB4DA")
     }
+    func testBlackThemeRoundTripsAndUsesTrueBlackCanvas() throws {
+        var p = Preferences(); p.theme = .black
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(p))
+        XCTAssertEqual(restored.theme, .black); XCTAssertTrue(restored.theme.isBlack)
+        let colors = ThemeColors(dark: false, black: true, accentHex: "D97757")
+        XCTAssertEqual(colors.canvas, .black); XCTAssertEqual(colors.primary.hex, "F2F2F2")
+    }
     func testUnknownCharacterDoesNotEraseOtherPreferences() throws {
         let p = try JSONDecoder().decode(Preferences.self, from: Data(#"{"mascot":"future","quiet":true,"accentHex":"AB0123"}"#.utf8))
         XCTAssertEqual(p.mascot, .clawd); XCTAssertTrue(p.quiet); XCTAssertEqual(p.accentHex, "AB0123")
     }
     func testThemeTextAndArbitraryAccentMeetWCAGContrastOnBothContentSurfaces() {
-        for dark in [false, true] {
+        for (dark, black) in [(false, false), (true, false), (false, true), (true, true)] {
             for hex in ["D97757", "FFFFFF", "000000", "FFFF00", "168E96", "AB12D4", "777777", "00FF00"] {
-                let colors = ThemeColors(dark: dark, accentHex: hex)
+                let colors = ThemeColors(dark: dark, black: black, accentHex: hex)
                 for background in [colors.canvas, colors.content] {
                     XCTAssertGreaterThanOrEqual(colors.primary.contrast(with: background), 4.5)
                     XCTAssertGreaterThanOrEqual(colors.secondary.contrast(with: background), 4.5)

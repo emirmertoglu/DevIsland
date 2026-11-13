@@ -12,7 +12,7 @@ Claude Code çalışırken seni haberdar eden yerel bir macOS menü çubuğu uyg
 - **Bir bakışta durum:** soru, plan onayı, izin, yanıt tamamlanması, hata ve bağlantı kesilmesi.
 - **Taşınabilir ada:** üst ortaya sabitle, özel konumu kaydet veya sabitli paneli açıp **Taşı** alanını sürükle. Tek tıklama adayı menü çubuğunun altına ayırır.
 - **Animasyonlu karakterler:** Clawd, Kedi ve Robot; ada ve sürüklenebilir masaüstü maskotunda oturum durumlarını paylaşır. İki görünümü birlikte veya ayrı kullan.
-- **Kişisel görünüm:** sistem/açık/koyu tema, değiştirilebilir vurgu ve karakter renkleri, ayrı sıfırlama düğmeleri, Liquid Glass, buzlu cam ve opak yüzeyler. Liquid Glass, macOS 14/15’te buzlu cam karşılığını kullanır.
+- **Kişisel görünüm:** sistem/açık/koyu/siyah tema (siyah tema adayı çentikle bütünleştirir), değiştirilebilir vurgu ve karakter renkleri, ayrı sıfırlama düğmeleri, Liquid Glass, buzlu cam ve opak yüzeyler. Liquid Glass, macOS 14/15’te buzlu cam karşılığını kullanır.
 - **Ayarlanabilir uyarılar:** olay bazında bildirim ve ses, özel ses düzeyi, sessiz saatler, erteleme ve oturum susturma.
 - **Yerel erişilebilirlik:** Reduce Motion, Reduce Transparency, klavye kullanımı ve değiştirilebilir oturum kısayolu.
 - **Türkçe ve İngilizce arayüz.**

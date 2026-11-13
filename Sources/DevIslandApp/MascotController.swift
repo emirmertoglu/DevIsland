@@ -54,7 +54,7 @@ struct DesktopMascotView: View {
 
 struct MascotTrayView: View {
     @Environment(\.colorScheme) private var systemScheme
-    private var colors: ThemeColors { ThemeColors(dark: (model.preferences.colorScheme ?? systemScheme) == .dark, accentHex: model.preferences.accentHex) }
+    private var colors: ThemeColors { model.preferences.themeColors(systemScheme: systemScheme) }
     @ObservedObject var model: AppModel
     var close: () -> Void
     var body: some View {

@@ -4,6 +4,9 @@ import DevIslandCore
 
 extension Preferences {
     var colorScheme: ColorScheme? { theme == .system ? nil : (theme == .light ? .light : .dark) }
+    func themeColors(systemScheme: ColorScheme) -> ThemeColors {
+        ThemeColors(dark: (colorScheme ?? systemScheme) == .dark, black: theme.isBlack, accentHex: accentHex)
+    }
     var accent: Color { Color(hex: accentHex) }
     var showsIsland: Bool { companionVisibility != .mascot }
     var showsMascot: Bool { companionVisibility != .island && !mascotHidden }
@@ -39,7 +42,7 @@ struct AppTheme: ViewModifier {
     @Environment(\.colorScheme) private var systemScheme
     func body(content: Content) -> some View {
         let scheme = preferences.colorScheme ?? systemScheme
-        let colors = ThemeColors(dark: scheme == .dark, accentHex: preferences.accentHex)
+        let colors = preferences.themeColors(systemScheme: systemScheme)
         content.environment(\.colorScheme, scheme).environment(\.themeColors, colors)
             .foregroundStyle(Color(colors.primary)).tint(Color(colors.accent))
     }
@@ -71,14 +74,18 @@ struct IslandSurface: ViewModifier {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.snapshotPreview) private var snapshot
-    private var fill: Color { scheme == .dark ? Color(hex: "202020") : Color(hex: "F5F5F5") }
+    private var black: Bool { preferences.theme.isBlack }
+    private var fill: Color { black ? .black : (scheme == .dark ? Color(hex: "202020") : Color(hex: "F5F5F5")) }
+    /// No hairline in black mode, so the island reads as one piece with the notch.
+    private var borderOpacity: Double { black ? 0 : (scheme == .dark ? 0.12 : 0.07) }
     func body(content: Content) -> some View {
         content.background { surface.allowsHitTesting(false) }
             .clipShape(shape)
-            .overlay(shape.strokeBorder(.primary.opacity(scheme == .dark ? 0.12 : 0.07), lineWidth: 0.5).allowsHitTesting(false))
+            .overlay(shape.strokeBorder(.primary.opacity(borderOpacity), lineWidth: 0.5).allowsHitTesting(false))
     }
     @ViewBuilder private var surface: some View {
-        if reduceTransparency || preferences.surface == .opaque {
+        // Black is always a solid surface; glass would tint it with the desktop behind.
+        if black || reduceTransparency || preferences.surface == .opaque {
             shape.fill(fill)
         } else if snapshot {
             // Static illustrations cannot sample the desktop behind an NSPanel.
@@ -105,7 +112,7 @@ extension View {
     switch preferences.theme {
     case .system: window.appearance = nil
     case .light: window.appearance = NSAppearance(named: .aqua)
-    case .dark: window.appearance = NSAppearance(named: .darkAqua)
+    case .dark, .black: window.appearance = NSAppearance(named: .darkAqua)
     }
 }
 
@@ -116,7 +123,7 @@ extension View {
         switch preferences.theme {
         case .system: NSApp.appearance = nil
         case .light: NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        case .dark, .black: NSApp.appearance = NSAppearance(named: .darkAqua)
         }
         for window in NSApp.windows { applyAppearance(preferences, to: window) }
     }

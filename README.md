@@ -12,7 +12,7 @@ A native macOS menu bar app that keeps you informed while Claude Code works. Fol
 - **Attention at a glance:** questions, plan approvals, permission requests, response completion, failures and disconnected sessions.
 - **Movable island:** pin to the top center, save a custom position, or open the docked panel and drag **Move**. Clicking Move detaches the island below the menu bar.
 - **Animated companions:** Clawd, Cat and Robot share session states across the island and a draggable desktop mascot. Use either surface or both.
-- **Personal appearance:** system/light/dark themes, customizable accent and per-character colors, separate reset controls, and Liquid Glass, frosted or opaque surfaces. Liquid Glass falls back to frosted glass on macOS 14/15.
+- **Personal appearance:** system/light/dark/black themes (black blends the island with the notch), customizable accent and per-character colors, separate reset controls, and Liquid Glass, frosted or opaque surfaces. Liquid Glass falls back to frosted glass on macOS 14/15.
 - **Configurable alerts:** event-specific notifications and sounds, custom audio volume, quiet hours, snooze and session muting.
 - **Native accessibility:** Reduce Motion, Reduce Transparency, keyboard access and a customizable session shortcut.
 - **English and Turkish interfaces.**

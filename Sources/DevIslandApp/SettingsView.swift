@@ -34,7 +34,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     @Environment(\.colorScheme) private var systemScheme
-    private var colors: ThemeColors { ThemeColors(dark: (model.preferences.colorScheme ?? systemScheme) == .dark, accentHex: model.preferences.accentHex) }
+    private var colors: ThemeColors { model.preferences.themeColors(systemScheme: systemScheme) }
     @State private var page: SettingsPage = .overview
     @State private var showHookPreview = false
     @State private var confirmingClear = false
@@ -237,6 +237,7 @@ struct SettingsView: View {
                     Text(model.t("Sistem", "System")).tag(ThemeMode.system)
                     Text(model.t("Açık", "Light")).tag(ThemeMode.light)
                     Text(model.t("Koyu", "Dark")).tag(ThemeMode.dark)
+                    Text(model.t("Siyah", "Black")).tag(ThemeMode.black)
                 }.pickerStyle(.segmented)
                 Picker(model.t("Yüzey", "Material"), selection: $model.preferences.surface) {
                     Text("Liquid Glass").tag(SurfaceMaterial.liquid)

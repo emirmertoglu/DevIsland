@@ -44,14 +44,16 @@ public struct SRGBColor: Equatable {
 
 public struct ThemeColors {
     public var canvas: SRGBColor, content: SRGBColor, primary: SRGBColor, secondary: SRGBColor, accent: SRGBColor, accentFill: SRGBColor, onAccent: SRGBColor
-    public init(dark: Bool, accentHex: String) {
-        canvas = SRGBColor(hex: dark ? "202020" : "F5F5F5")
-        content = SRGBColor(hex: dark ? "292929" : "FFFFFF")
+    /// `black` implies a dark appearance with true-black surfaces (matching the hardware notch).
+    public init(dark: Bool, black: Bool = false, accentHex: String) {
+        let dark = dark || black
+        canvas = SRGBColor(hex: black ? "000000" : (dark ? "202020" : "F5F5F5"))
+        content = SRGBColor(hex: black ? "0A0A0A" : (dark ? "292929" : "FFFFFF"))
         primary = SRGBColor(hex: dark ? "F2F2F2" : "242424")
         secondary = SRGBColor(hex: dark ? "B8B8B8" : "626262")
         // Account for native grouped controls as well as the main content surfaces.
         accentFill = SRGBColor(hex: accentHex)
-        accent = accentFill.readable(on: SRGBColor(hex: dark ? "353535" : "EBEBEB"))
+        accent = accentFill.readable(on: SRGBColor(hex: black ? "1F1F1F" : (dark ? "353535" : "EBEBEB")))
         onAccent = accentFill.ink
     }
 }
