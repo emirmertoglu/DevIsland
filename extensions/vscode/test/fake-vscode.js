@@ -4,7 +4,8 @@ function createFake(pids, group = []) {
   const event = callback => { handlers.add(callback); return { dispose() { handlers.delete(callback); } }; };
   const fake = {
     workspace: { workspaceFolders: [{ uri: { scheme: 'file', fsPath: '/Projects/same-project' } }], onDidChangeWorkspaceFolders: event },
-    window: { terminals: [], activeTerminal: undefined, state: { focused: false }, onDidOpenTerminal: event, onDidCloseTerminal: event },
+    window: { terminals: [], activeTerminal: undefined, state: { focused: false }, onDidOpenTerminal: event, onDidCloseTerminal: event,
+      onDidChangeActiveTerminal: event, onDidChangeWindowState: event },
     commands: { calls: [], async getCommands() { return ['workbench.action.focusWindow']; }, async executeCommand(command) {
       fake.commands.calls.push(command);
       for (const item of group) item.window.state.focused = false;

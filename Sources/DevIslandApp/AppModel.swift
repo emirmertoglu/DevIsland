@@ -261,7 +261,7 @@ import CDevIsland
         if preferences.reminders {
             for s in sessions where s.state.isWaiting && !s.reminderSent {
                 if let since = s.attentionSince, Date().timeIntervalSince(since) >= 120,
-                   AttentionEngine.decide(session: s, preferences: preferences, replay: false) != .silent {
+                   AttentionEngine.decide(session: s, preferences: preferences, replay: false, sourceFocused: isSourceFocused(s)) != .silent {
                     ledger.sessions[s.id]?.reminderSent = true
                     alert(sessionID: s.id, replay: false)
                     try? repository?.save(ledger)
@@ -287,7 +287,7 @@ import CDevIsland
     }
     private func alert(sessionID: String, replay: Bool) {
         guard let session = ledger.sessions[sessionID] else { return }
-        let decision = AttentionEngine.decide(session: session, preferences: preferences, replay: replay)
+        let decision = AttentionEngine.decide(session: session, preferences: preferences, replay: replay, sourceFocused: isSourceFocused(session))
         if decision.island { presentAlert?(sessionID) }
         let systemSound = preferences.soundMode == "system"
         // System mode always uses a native delivery, preserving Focus behavior and avoiding custom playback.
@@ -306,6 +306,12 @@ import CDevIsland
         if decision.sound && !systemSound && Date().timeIntervalSince(burstSounds) > 0.7 {
             burstSounds = Date(); playSound()
         }
+    }
+    /// Exact terminal check: VS Code is frontmost and its focused window's active terminal hosts this session.
+    private func isSourceFocused(_ session: AgentSession) -> Bool {
+        guard preferences.suppressWhenSourceFocused, session.source.bundleID == TerminalChoice.vscode.rawValue,
+              NSWorkspace.shared.frontmostApplication?.bundleIdentifier == TerminalChoice.vscode.rawValue else { return false }
+        return EditorRouteClient.isFocused(session: session)
     }
     func playSound() {
         if preferences.soundMode == "system" { NSSound.beep(); return }

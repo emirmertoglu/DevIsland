@@ -30,6 +30,23 @@ final class EditorRoutingTests: XCTestCase {
         failure([window([101], age: 46), oldEditor], [101], .editorTooOld)
         XCTAssertEqual(try EditorRoutePolicy.select(windows: [oldEditor, window([202])], processIDs: [202]).terminal.processID, 202)
     }
+    func testFocusedTerminalRequiresFocusedWindowAndExactActiveTerminal() {
+        func focused(_ w: EditorWindow, _ isFocused: Bool?, active: Int?) -> EditorWindow {
+            EditorWindow(windowID: w.windowID, socketPath: w.socketPath, token: w.token, updatedAt: w.updatedAt, workspaceFolders: w.workspaceFolders,
+                         terminals: w.terminals, focused: isFocused, activeTerminalID: active.map { w.terminals[$0].id })
+        }
+        let a = window([101, 102]), b = window([201, 202])
+        // Session runs in b's second terminal.
+        XCTAssertTrue(EditorRoutePolicy.isTerminalFocused(windows: [focused(a, false, active: 0), focused(b, true, active: 1)], processIDs: [999, 202]))
+        // Another project's window is focused.
+        XCTAssertFalse(EditorRoutePolicy.isTerminalFocused(windows: [focused(a, true, active: 0), focused(b, false, active: 1)], processIDs: [999, 202]))
+        // Same window, different terminal selected.
+        XCTAssertFalse(EditorRoutePolicy.isTerminalFocused(windows: [focused(a, false, active: 0), focused(b, true, active: 0)], processIDs: [202]))
+        // Older connector without focus data, stale registry, unknown source.
+        XCTAssertFalse(EditorRoutePolicy.isTerminalFocused(windows: [b], processIDs: [202]))
+        XCTAssertFalse(EditorRoutePolicy.isTerminalFocused(windows: [focused(window([202], age: 46), true, active: 0)], processIDs: [202]))
+        XCTAssertFalse(EditorRoutePolicy.isTerminalFocused(windows: [focused(b, true, active: 1)], processIDs: []))
+    }
     func testSourcePIDBirthTimeProtectsAgainstReuse() throws {
         let info = try XCTUnwrap(ProcessIdentity.read(getpid()))
         let good = SourceApplication(bundleID: TerminalChoice.vscode.rawValue, processID: info.pid, processStart: info.start)

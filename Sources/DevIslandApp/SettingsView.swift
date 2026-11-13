@@ -164,6 +164,7 @@ struct SettingsView: View {
             group {
                 Toggle(model.t("Sessiz mod", "Quiet mode"), isOn: $model.preferences.quiet)
                 Toggle(model.t("2 dakika sonra tek hatırlatma", "One reminder after 2 minutes"), isOn: $model.preferences.reminders)
+                Toggle(model.t("Oturumun terminali öndeyken uyarma (VS Code)", "Don’t alert while the session’s terminal is in front (VS Code)"), isOn: $model.preferences.suppressWhenSourceFocused)
                 Toggle(model.t("Sessiz saatler", "Quiet hours"), isOn: $model.preferences.quietHours)
                 if model.preferences.quietHours {
                     HStack {

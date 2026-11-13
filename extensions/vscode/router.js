@@ -40,7 +40,11 @@ async function createRouter(vscode, options = {}) {
       try { if (target.isAlive()) terminals.push({ id: target.id, processID: target.processID, name: target.name, kind: 'external' }); } catch {}
     }
     if (disposed || run !== generation) return;
+    // Lets Dev Island skip alerts for the terminal the user is already looking at.
+    const active = vscode.window.activeTerminal;
+    const activeTerminalID = active && terminals.some(item => item.id === terminalIDs.get(active)) ? terminalIDs.get(active) : undefined;
     const record = { version: 1, windowID, bundleID: 'com.microsoft.VSCode', socketPath, token, canFocus,
+      focused: !!(vscode.window.state && vscode.window.state.focused), activeTerminalID,
       updatedAt: Date.now() / 1000, workspaceFolders: (vscode.workspace.workspaceFolders || []).filter(f => f.uri.scheme === 'file').slice(0, 64).map(f => f.uri.fsPath), terminals };
     const temp = registryPath + '.tmp';
     fs.writeFileSync(temp, JSON.stringify(record), { mode: 0o600 });
@@ -93,7 +97,8 @@ async function createRouter(vscode, options = {}) {
   fs.chmodSync(socketPath, 0o600);
   server.on('error', () => {});
   const changed = () => refresh().catch(() => {});
-  for (const event of [vscode.window.onDidOpenTerminal, vscode.window.onDidCloseTerminal, vscode.workspace.onDidChangeWorkspaceFolders]) subscriptions.push(event(changed));
+  for (const event of [vscode.window.onDidOpenTerminal, vscode.window.onDidCloseTerminal, vscode.window.onDidChangeActiveTerminal,
+    vscode.window.onDidChangeWindowState, vscode.workspace.onDidChangeWorkspaceFolders]) if (typeof event === 'function') subscriptions.push(event(changed));
   const heartbeat = setInterval(changed, 10000); heartbeat.unref();
   function dispose() {
     if (disposed) return;

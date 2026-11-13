@@ -18,10 +18,15 @@ public struct EditorWindow: Codable, Equatable {
     public let updatedAt: Double
     public let workspaceFolders: [String]
     public let terminals: [EditorTerminal]
+    /// Reported by connector 0.1.2+; older connectors omit them and never suppress alerts.
+    public let focused: Bool?
+    public let activeTerminalID: String?
     public init(version: Int = 1, windowID: String, bundleID: String = TerminalChoice.vscode.rawValue, socketPath: String,
-                token: String, canFocus: Bool = true, updatedAt: Double, workspaceFolders: [String], terminals: [EditorTerminal]) {
+                token: String, canFocus: Bool = true, updatedAt: Double, workspaceFolders: [String], terminals: [EditorTerminal],
+                focused: Bool? = nil, activeTerminalID: String? = nil) {
         self.version = version; self.windowID = windowID; self.bundleID = bundleID; self.socketPath = socketPath
         self.token = token; self.canFocus = canFocus; self.updatedAt = updatedAt; self.workspaceFolders = workspaceFolders; self.terminals = terminals
+        self.focused = focused; self.activeTerminalID = activeTerminalID
     }
 }
 public struct EditorTarget: Equatable {
@@ -44,6 +49,15 @@ public enum EditorRoutePolicy {
         guard !matches.isEmpty else { throw EditorRoutingError.missingTerminal }
         guard matches.count == 1 else { throw EditorRoutingError.ambiguous }
         return matches[0]
+    }
+    /// True only when the session's exact terminal is the active terminal of the focused VS Code window.
+    public static func isTerminalFocused(windows: [EditorWindow], processIDs: Set<Int32>, now: Date = Date()) -> Bool {
+        guard !processIDs.isEmpty else { return false }
+        let matches = windows.filter { $0.version == 1 && $0.bundleID == TerminalChoice.vscode.rawValue &&
+            now.timeIntervalSince1970 - $0.updatedAt <= 45 && $0.updatedAt <= now.timeIntervalSince1970 + 5 }
+            .flatMap { window in window.terminals.filter { processIDs.contains($0.processID) }.map { EditorTarget(window: window, terminal: $0) } }
+        guard matches.count == 1, let match = matches.first else { return false }
+        return match.window.focused == true && match.window.activeTerminalID == match.terminal.id
     }
 }
 public enum EditorRegistry {
@@ -105,6 +119,10 @@ public enum EditorRouteClient {
         let target = try EditorRoutePolicy.select(windows: windows, processIDs: Set(ancestors.map(\.pid)))
         try focus(target: target)
         return target
+    }
+    public static func isFocused(session: AgentSession, root: URL = EditorRegistry.root) -> Bool {
+        EditorRoutePolicy.isTerminalFocused(windows: EditorRegistry.read(root: root),
+                                            processIDs: Set(ProcessIdentity.ancestors(source: session.source).map(\.pid)))
     }
     public static func focus(target: EditorTarget) throws {
         let request = EditorFocusRequest(target: target)

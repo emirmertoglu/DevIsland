@@ -110,3 +110,11 @@ test('external terminal must acknowledge focus and remain alive', async t => {
   assert.equal((await send(r,request(r))).ok,false);
   assert.throws(()=>router.registerExternalTerminal({id,processID:404,isAlive:()=>true,focus:async()=>true}),/Invalid/);
 });
+test('registry reports window focus and the active terminal', async t => {
+  const fake = createFake([101, 102]), router = await createRouter(fake, { root: root(t) }); t.after(() => router.dispose());
+  let r = record(router);
+  assert.equal(r.focused, false); assert.equal(r.activeTerminalID, undefined);
+  fake.window.state.focused = true; fake.window.activeTerminal = fake.window.terminals[1]; await router.refresh();
+  r = record(router);
+  assert.equal(r.focused, true); assert.equal(r.activeTerminalID, r.terminals[1].id);
+});

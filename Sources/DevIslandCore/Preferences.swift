@@ -37,6 +37,8 @@ public struct Preferences: Codable {
     public var soundName = "Glass"
     public var customSoundPath = ""
     public var reminders = false
+    /// Skip alerts while the session's own terminal is the one the user is looking at.
+    public var suppressWhenSourceFocused = true
     public var hideProjects = false
     public var showPreview = false
     public var showOverFullscreen = true
@@ -68,7 +70,7 @@ public struct Preferences: Codable {
     // Adding visual preferences must not discard existing notification/terminal settings.
     private enum CodingKeys: String, CodingKey {
         case language, quiet, quietHours, quietStart, quietEnd, volume, soundMode, soundName, customSoundPath
-        case reminders, hideProjects, showPreview, showOverFullscreen, displayID, preferredTerminal
+        case reminders, suppressWhenSourceFocused, hideProjects, showPreview, showOverFullscreen, displayID, preferredTerminal
         case shortcutKey, shortcutModifiers, shortcutLabel, retentionDays, rules
         case theme, surface, glassStyle, accentHex, surfaceDensity, companionVisibility, mascotHidden, mascotSize, mascotPlacement, seenCompletions
         case appearanceVersion, mascot, mascotColors, islandPlacement
@@ -81,6 +83,7 @@ public struct Preferences: Codable {
         quietStart = read(.quietStart, quietStart); quietEnd = read(.quietEnd, quietEnd)
         volume = read(.volume, volume); soundMode = read(.soundMode, soundMode); soundName = read(.soundName, soundName)
         customSoundPath = read(.customSoundPath, customSoundPath); reminders = read(.reminders, reminders)
+        suppressWhenSourceFocused = read(.suppressWhenSourceFocused, suppressWhenSourceFocused)
         hideProjects = read(.hideProjects, hideProjects); showPreview = read(.showPreview, showPreview)
         showOverFullscreen = read(.showOverFullscreen, showOverFullscreen); displayID = read(.displayID, displayID)
         preferredTerminal = try? c.decodeIfPresent(String.self, forKey: .preferredTerminal)
@@ -121,9 +124,12 @@ public struct AttentionDecision: Equatable {
 }
 
 public enum AttentionEngine {
-    public static func decide(session: AgentSession, preferences: Preferences, replay: Bool, now: Date = Date()) -> AttentionDecision {
+    /// `sourceFocused`: the session's exact terminal is currently in front, so the user is already there.
+    public static func decide(session: AgentSession, preferences: Preferences, replay: Bool, now: Date = Date(),
+                              sourceFocused: Bool = false) -> AttentionDecision {
         guard !replay, session.revalidated, !session.muted,
               !(session.snoozedUntil.map { $0 > now } ?? false), !preferences.isQuiet(at: now) else { return .silent }
+        if preferences.suppressWhenSourceFocused && sourceFocused { return .silent }
         let rule = preferences.rule(for: session.state)
         return AttentionDecision(island: rule.island, notification: rule.notification, sound: rule.sound)
     }

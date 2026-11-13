@@ -145,6 +145,14 @@ final class SessionLedgerTests: XCTestCase {
         session.muted = false; session.snoozedUntil = base.addingTimeInterval(300)
         XCTAssertEqual(AttentionEngine.decide(session: session, preferences: prefs, replay: false, now: base), .silent)
     }
+    func testFocusedSourceTerminalSuppressesAlerts() {
+        var session = AgentSession(id: "x", cwd: "/x", lastEvent: base, source: .init()); session.state = .completed
+        var prefs = Preferences()
+        XCTAssertEqual(AttentionEngine.decide(session: session, preferences: prefs, replay: false, now: base, sourceFocused: true), .silent)
+        XCTAssertNotEqual(AttentionEngine.decide(session: session, preferences: prefs, replay: false, now: base, sourceFocused: false), .silent)
+        prefs.suppressWhenSourceFocused = false
+        XCTAssertNotEqual(AttentionEngine.decide(session: session, preferences: prefs, replay: false, now: base, sourceFocused: true), .silent)
+    }
     func testQuietHoursCrossMidnightAndSameDay() {
         var prefs = Preferences(); prefs.quietHours = true
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
